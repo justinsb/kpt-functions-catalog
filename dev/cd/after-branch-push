@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ -z "${GIT_REF}" ]; then
+  echo "GIT_REF must be set"
+  exit 1
+fi
+
+if [[ ! "${GIT_REF}" =~ ^refs/heads/.* ]]; then
+  echo "GIT_REF=${GIT_REF} is not of the expected format refs/heads/*"
+  exit 1
+fi
+
+BRANCH=${GIT_REF/refs\/heads\//}
+echo "BRANCH is ${BRANCH}"
+
+REF=$(git rev-parse --short HEAD)
+echo "REF is ${REF}"
+
+
+export IMAGE_TAG="${BRANCH}-git-${REF}"
+echo "IMAGE_TAG is ${IMAGE_TAG}"
+
+for f in $(find . -type f -name "krm-fn-metadata.yaml"); do
+  dir=$(dirname ${f})
+  echo "directory: ${dir}"
+  pushd "${dir}"
+    make push
+  popd
+done
